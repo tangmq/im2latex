@@ -1,6 +1,4 @@
-import os
 import numpy as np
-import os
 import PIL
 from PIL import Image
 from multiprocessing import Pool
@@ -168,14 +166,14 @@ def convert_to_png(formula, dir_output, name, quality=100, density=200,
         $$ %s $$
     \end{document}""" % (formula))
 
-    # call pdflatex to create pdf
-    run("pdflatex -interaction=nonstopmode -output-directory={} {}".format(
-        dir_output, dir_output+"{}.tex".format(name)), TIMEOUT)
-
-    # call magick to convert the pdf into a png file
-    run("magick convert -density {} -quality {} {} {}".format(density, quality,
-        dir_output+"{}.pdf".format(name), dir_output+"{}.png".format(name)),
-        TIMEOUT)
+    # # call pdflatex to create pdf
+    # run("pdflatex -interaction=nonstopmode -output-directory={} {}".format(
+    #     dir_output, dir_output+"{}.tex".format(name)), TIMEOUT)
+    #
+    # # call magick to convert the pdf into a png file
+    # run("magick convert -density {} -quality {} {} {}".format(density, quality,
+    #     dir_output+"{}.pdf".format(name), dir_output+"{}.png".format(name)),
+    #     TIMEOUT)
 
     # cropping and downsampling
     img_path = dir_output + "{}.png".format(name)
