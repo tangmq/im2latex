@@ -18,13 +18,15 @@ def get_max_shape(arrays):
         images: list of arrays
 
     """
-    shapes = map(lambda x: list(x.shape), arrays)
-    ndim = len(arrays[0].shape)
-    max_shape = []
-    for d in range(ndim):
-        max_shape += [max(shapes, key=lambda x: x[d])[d]]
-
-    return max_shape
+    shapes = list(map(lambda x: list(x.shape), arrays))
+    return [max(x) for x in zip(*shapes)]
+    # shapes = map(lambda x: list(x.shape), arrays)
+    # ndim = len(arrays[0].shape)
+    # max_shape = []
+    # for d in range(ndim):
+    #     max_shape += [max(shapes, key=lambda x: x[d])[d]]
+    #
+    # return max_shape
 
 
 def pad_batch_images(images, max_shape=None):
