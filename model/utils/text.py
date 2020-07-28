@@ -133,12 +133,12 @@ def pad_batch_formulas(formulas, id_pad, id_end, max_len=None):
         max_len = max(map(lambda x: len(x), formulas))
 
     batch_formulas = id_pad * np.ones([len(formulas), max_len+1],
-            dtype=np.int32)
+                                      dtype=np.int32)
     formula_length = np.zeros(len(formulas), dtype=np.int32)
     for idx, formula in enumerate(formulas):
         batch_formulas[idx, :len(formula)] = np.asarray(formula,
-                dtype=np.int32)
-        batch_formulas[idx, len(formula)]  = id_end
+                                                        dtype=np.int32)
+        batch_formulas[idx, len(formula)] = id_end
         formula_length[idx] = len(formula) + 1
 
     return batch_formulas, formula_length

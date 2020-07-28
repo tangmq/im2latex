@@ -1,7 +1,4 @@
-import numpy as np
 import tensorflow as tf
-from tensorflow.python.util import nest
-import tensorflow.contrib.layers as layers
 from tensorflow.contrib.rnn import GRUCell, LSTMCell
 
 
@@ -38,57 +35,57 @@ class Decoder(object):
 
         """
         dim_embeddings = self._config.attn_cell_config.get("dim_embeddings")
-        E = tf.get_variable("E", initializer=embedding_initializer(),
-                shape=[self._n_tok, dim_embeddings], dtype=tf.float32)
+        embedding_table = tf.get_variable("embedding_table", initializer=embedding_initializer(),
+                                          shape=[self._n_tok, dim_embeddings], dtype=tf.float32)
 
         start_token = tf.get_variable("start_token", dtype=tf.float32,
-                shape=[dim_embeddings], initializer=embedding_initializer())
+                                      shape=[dim_embeddings], initializer=embedding_initializer())
 
         batch_size = tf.shape(img)[0]
 
         # training
         with tf.variable_scope("attn_cell", reuse=False):
-            embeddings = get_embeddings(formula, E, dim_embeddings,
-                    start_token, batch_size)
+            embeddings = get_embeddings(formula, embedding_table, dim_embeddings,
+                                        start_token, batch_size)
             attn_meca = AttentionMechanism(img,
-                    self._config.attn_cell_config["dim_e"])
+                                           self._config.attn_cell_config["dim_e"])
             recu_cell = LSTMCell(self._config.attn_cell_config["num_units"])
             attn_cell = AttentionCell(recu_cell, attn_meca, dropout,
-                    self._config.attn_cell_config, self._n_tok)
+                                      self._config.attn_cell_config, self._n_tok)
 
             train_outputs, _ = tf.nn.dynamic_rnn(attn_cell, embeddings,
-                    initial_state=attn_cell.initial_state())
+                                                 initial_state=attn_cell.initial_state())
 
         # decoding
         with tf.variable_scope("attn_cell", reuse=True):
             attn_meca = AttentionMechanism(img=img,
-                    dim_e=self._config.attn_cell_config["dim_e"],
-                    tiles=self._tiles)
+                                           dim_e=self._config.attn_cell_config["dim_e"],
+                                           tiles=self._tiles)
             recu_cell = LSTMCell(self._config.attn_cell_config["num_units"],
-                    reuse=True)
+                                 reuse=True)
             attn_cell = AttentionCell(recu_cell, attn_meca, dropout,
-                    self._config.attn_cell_config, self._n_tok)
+                                      self._config.attn_cell_config, self._n_tok)
             if self._config.decoding == "greedy":
-                decoder_cell = GreedyDecoderCell(E, attn_cell, batch_size,
-                        start_token, id_end)
+                decoder_cell = GreedyDecoderCell(embedding_table, attn_cell, batch_size,
+                                                 start_token, self._id_end)
             elif self._config.decoding == "beam_search":
-                decoder_cell = BeamSearchDecoderCell(E, attn_cell, batch_size,
-                        start_token, self._id_end, self._config.beam_size,
-                        self._config.div_gamma, self._config.div_prob)
+                decoder_cell = BeamSearchDecoderCell(embedding_table, attn_cell, batch_size,
+                                                     start_token, self._id_end, self._config.beam_size,
+                                                     self._config.div_gamma, self._config.div_prob)
 
             test_outputs, _ = dynamic_decode(decoder_cell,
-                    self._config.max_length_formula+1)
+                                             self._config.max_length_formula+1)
 
         return train_outputs, test_outputs
 
 
-def get_embeddings(formula, E, dim, start_token, batch_size):
+def get_embeddings(formula, embedding_table, dim, start_token, batch_size):
     """Returns the embedding of the n-1 first elements in the formula concat
     with the start token
 
     Args:
         formula: (tf.placeholder) tf.uint32
-        E: tf.Variable (matrix)
+        embedding_table: tf.Variable (matrix)
         dim: (int) dimension of embeddings
         start_token: tf.Variable
         batch_size: tf variable extracted from placeholder
@@ -97,7 +94,7 @@ def get_embeddings(formula, E, dim, start_token, batch_size):
         embeddings_train: tensor
 
     """
-    formula_ = tf.nn.embedding_lookup(E, formula)
+    formula_ = tf.nn.embedding_lookup(embedding_table, formula)
     start_token_ = tf.reshape(start_token, [1, 1, dim])
     start_tokens = tf.tile(start_token_, multiples=[batch_size, 1, 1])
     embeddings = tf.concat([start_tokens, formula_[:, :-1, :]], axis=1)
@@ -108,8 +105,8 @@ def get_embeddings(formula, E, dim, start_token, batch_size):
 def embedding_initializer():
     """Returns initializer for embeddings"""
     def _initializer(shape, dtype, partition_info=None):
-        E = tf.random_uniform(shape, minval=-1.0, maxval=1.0, dtype=dtype)
-        E = tf.nn.l2_normalize(E, -1)
-        return E
+        embedding_table = tf.random_uniform(shape, minval=-1.0, maxval=1.0, dtype=dtype)
+        embedding_table = tf.nn.l2_normalize(embedding_table, -1)
+        return embedding_table
 
     return _initializer

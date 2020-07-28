@@ -1,6 +1,6 @@
 import numpy as np
 import distance
-from scipy.misc import imread
+import imageio
 
 
 from ..utils.general import get_files
@@ -24,11 +24,11 @@ def score_dirs(dir_ref, dir_hyp, prepro_img):
     em_tot = l_dist_tot = length_tot = n_ex = 0
 
     for img_name in img_refs:
-        img_ref = imread(dir_ref + img_name)
+        img_ref = imageio.imread(dir_ref + img_name)
         img_ref = prepro_img(img_ref)
 
         if img_name in img_hyps:
-            img_hyp = imread(dir_hyp + img_name)
+            img_hyp = imageio.imread(dir_hyp + img_name)
             img_hyp = prepro_img(img_hyp)
             l_dist, length = img_edit_distance(img_ref, img_hyp)
         else:

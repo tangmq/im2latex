@@ -1,6 +1,6 @@
 tensorflow
 numpy
-scipy
+imageio
 nltk
 pillow
 distance

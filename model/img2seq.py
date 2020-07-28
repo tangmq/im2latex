@@ -1,15 +1,11 @@
-import sys
 import numpy as np
 import tensorflow as tf
-import tensorflow.contrib.layers as layers
 
 
 from .utils.general import Config, Progbar, minibatches
 from .utils.image import pad_batch_images
 from .utils.text import pad_batch_formulas
 from .evaluation.text import score_files, write_answers, truncate_end
-
-
 from .encoder import Encoder
 from .decoder import Decoder
 from .base import BaseModel
