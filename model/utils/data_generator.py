@@ -1,7 +1,7 @@
 import imageio
 
 from .text import load_formulas
-from .image import build_images, greyscale
+from .image import build_images
 from .general import init_dir
 
 
