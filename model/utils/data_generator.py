@@ -159,7 +159,9 @@ class DataGenerator(object):
 
         img = imageio.imread(self._dir_images + img_path)
         img = self._img_prepro(img)
-        formula = self._form_prepro(self._get_raw_formula(formula_id))  # py3.x 要加 list()， 不然会返回 map
+        formula = self._form_prepro(self._get_raw_formula(formula_id))
+
+        formula = list(formula)# py3.x 要加 list()， 不然会返回 map
 
         if self._iter_mode == "data":
             inst = (img, formula)
