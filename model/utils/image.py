@@ -185,7 +185,7 @@ def convert_to_png(formula, dir_output, name, quality=100, density=200,
         crop_image(img_path, img_path)
         pad_image(img_path, img_path, buckets=buckets)
         downsample_image(img_path, img_path, down_ratio)
-        clean(dir_output, name)
+        # clean(dir_output, name)
 
         return "{}.png".format(name)
 
