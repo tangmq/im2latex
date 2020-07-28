@@ -7,7 +7,6 @@ tmp/
 *.aux
 *.log
 *.gz
-*.log
 *.sh
 .idea/
 venv/
