@@ -168,7 +168,7 @@ class DataGenerator(object):
         elif self._iter_mode == "full":
             inst = (img, formula, img_path, formula_id)
 
-        print(formula);
+        # print(formula);
         # filter on the formula length
         if self._max_len is not None and len(formula) > self._max_len:
             skip = True
