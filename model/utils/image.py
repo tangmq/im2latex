@@ -158,6 +158,8 @@ def convert_to_png(formula, dir_output, name, quality=100, density=200,
         buckets: list of tuples (list of sizes) to produce similar shape images
 
     """
+    print("dir_output:"+dir_output)
+    print("name:" + name)
     # write formula into a .tex file
     with open(dir_output + "{}.tex".format(name), "w") as f:
         f.write(
