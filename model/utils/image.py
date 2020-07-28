@@ -166,16 +166,17 @@ def convert_to_png(formula, dir_output, name, quality=100, density=200,
         $$ %s $$
     \end{document}""" % (formula))
 
-    # # call pdflatex to create pdf
+    # call pdflatex to create pdf
     pdf_latex_cmd = "pdflatex -interaction=nonstopmode -output-directory={} {}".format(
-        dir_output, dir_output+"{}.tex".format(name))
+        dir_output[:-1], dir_output+"{}.tex".format(name))
     print(pdf_latex_cmd)
     run(pdf_latex_cmd, TIMEOUT)
 
-    # # call magick to convert the pdf into a png file
-    # run("magick convert -density {} -quality {} {} {}".format(density, quality,
-    #     dir_output+"{}.pdf".format(name), dir_output+"{}.png".format(name)),
-    #     TIMEOUT)
+    # call magick to convert the pdf into a png file
+    magick_cmd = "magick convert -density {} -quality {} {} {}".format(density, quality,
+        dir_output+"{}.pdf".format(name), dir_output+"{}.png".format(name))
+    print(magick_cmd)
+    run(magick_cmd, TIMEOUT)
 
     # cropping and downsampling
     img_path = dir_output + "{}.png".format(name)
