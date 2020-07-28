@@ -3,9 +3,7 @@ import PIL
 from PIL import Image
 from multiprocessing import Pool
 
-
 from .general import run, get_files, delete_file, init_dir
-
 
 TIMEOUT = 10
 
@@ -49,7 +47,7 @@ def pad_batch_images(images, max_shape=None):
 
 def greyscale(state):
     """Preprocess state (:, :, 3) image into greyscale"""
-    state = state[:, :, 0]*0.299 + state[:, :, 1]*0.587 + state[:, :, 2]*0.114
+    state = state[:, :, 0] * 0.299 + state[:, :, 1] * 0.587 + state[:, :, 2] * 0.114
     state = state[:, :, np.newaxis]
     return state.astype(np.uint8)
 
@@ -64,7 +62,7 @@ def downsample(state):
     return state[::2, ::2, :]
 
 
-def pad_image(img, output_path, pad_size=[8,8,8,8], buckets=None):
+def pad_image(img, output_path, pad_size=[8, 8, 8, 8], buckets=None):
     """Pads image with pad size and with buckets
 
     Args:
@@ -78,7 +76,7 @@ def pad_image(img, output_path, pad_size=[8,8,8,8], buckets=None):
     old_im = Image.open(img)
     old_size = (old_im.size[0] + left + right, old_im.size[1] + top + bottom)
     new_size = get_new_size(old_size, buckets)
-    new_im = Image.new("RGB", new_size, (255,255,255))
+    new_im = Image.new("RGB", new_size, (255, 255, 255))
     new_im.paste(old_im, (left, top))
     new_im.save(output_path)
 
@@ -115,8 +113,8 @@ def crop_image(img, output_path):
 
     """
     old_im = Image.open(img).convert('L')
-    img_data = np.asarray(old_im, dtype=np.uint8) # height, width
-    nnz_inds = np.where(img_data!=255)
+    img_data = np.asarray(old_im, dtype=np.uint8)  # height, width
+    nnz_inds = np.where(img_data != 255)
     if len(nnz_inds[0]) == 0:
         old_im.save(output_path)
         return False
@@ -125,19 +123,19 @@ def crop_image(img, output_path):
     y_max = np.max(nnz_inds[0])
     x_min = np.min(nnz_inds[1])
     x_max = np.max(nnz_inds[1])
-    old_im = old_im.crop((x_min, y_min, x_max+1, y_max+1))
+    old_im = old_im.crop((x_min, y_min, x_max + 1, y_max + 1))
     old_im.save(output_path)
     return True
 
 
 def downsample_image(img, output_path, ratio=2):
     """Downsample image by ratio"""
-    assert ratio>=1, ratio
+    assert ratio >= 1, ratio
     if ratio == 1:
         return True
     old_im = Image.open(img)
     old_size = old_im.size
-    new_size = (int(old_size[0]/ratio), int(old_size[1]/ratio))
+    new_size = (int(old_size[0] / ratio), int(old_size[1] / ratio))
 
     new_im = old_im.resize(new_size, PIL.Image.LANCZOS)
     new_im.save(output_path)
@@ -145,7 +143,7 @@ def downsample_image(img, output_path, ratio=2):
 
 
 def convert_to_png(formula, dir_output, name, quality=100, density=200,
-        down_ratio=2, buckets=None):
+                   down_ratio=2, buckets=None):
     """Converts LaTeX to png image
 
     Args:
@@ -156,26 +154,27 @@ def convert_to_png(formula, dir_output, name, quality=100, density=200,
         buckets: list of tuples (list of sizes) to produce similar shape images
 
     """
-    print("dir_output:"+dir_output)
+    print("dir_output:" + dir_output)
     print("name:" + name)
     print("formula:" + formula)
     # write formula into a .tex file
     with open(dir_output + "{}.tex".format(name), "w") as f:
         f.write(
-    r"""\documentclass[preview]{standalone}
+            r"""\documentclass[preview]{standalone}
     \begin{document}
         $$ %s $$
     \end{document}""" % (formula))
 
     # call pdflatex to create pdf
     pdf_latex_cmd = "pdflatex -interaction=nonstopmode -output-directory={} {}".format(
-        dir_output[:-1], dir_output+"{}.tex".format(name))
+        dir_output[:-1], dir_output + "{}.tex".format(name))
     print(pdf_latex_cmd)
     run(pdf_latex_cmd, TIMEOUT)
 
     # call magick to convert the pdf into a png file
     magick_cmd = "magick convert -density {} -quality {} {} {}".format(density, quality,
-        dir_output+"{}.pdf".format(name), dir_output+"{}.png".format(name))
+                                                                       dir_output + "{}.pdf".format(name),
+                                                                       dir_output + "{}.png".format(name))
     print(magick_cmd)
     run(magick_cmd, TIMEOUT)
 
@@ -186,7 +185,7 @@ def convert_to_png(formula, dir_output, name, quality=100, density=200,
         crop_image(img_path, img_path)
         pad_image(img_path, img_path, buckets=buckets)
         downsample_image(img_path, img_path, down_ratio)
-        # clean(dir_output, name)
+        clean(dir_output, name)
 
         return "{}.png".format(name)
 
@@ -197,22 +196,22 @@ def convert_to_png(formula, dir_output, name, quality=100, density=200,
 
 
 def clean(dir_output, name):
-    delete_file(dir_output+"{}.aux".format(name))
-    delete_file(dir_output+"{}.log".format(name))
-    delete_file(dir_output+"{}.pdf".format(name))
-    delete_file(dir_output+"{}.tex".format(name))
+    delete_file(dir_output + "{}.aux".format(name))
+    delete_file(dir_output + "{}.log".format(name))
+    delete_file(dir_output + "{}.pdf".format(name))
+    delete_file(dir_output + "{}.tex".format(name))
 
 
 def build_image(item):
     idx, form, dir_images, quality, density, down_ratio, buckets = item
     name = str(idx)
     path_img = convert_to_png(form, dir_images, name, quality, density,
-            down_ratio, buckets)
+                              down_ratio, buckets)
     return (path_img, idx)
 
 
 def build_images(formulas, dir_images, quality=100, density=200, down_ratio=2,
-        buckets=None, n_threads=4):
+                 buckets=None, n_threads=4):
     """Parallel procedure to produce images from formulas
 
     If some of the images have already been produced, does not recompile them.
@@ -226,12 +225,12 @@ def build_images(formulas, dir_images, quality=100, density=200, down_ratio=2,
     """
     init_dir(dir_images)
     existing_idx = sorted(set([int(file_name.split('.')[0]) for file_name in
-            get_files(dir_images) if file_name.split('.')[-1] == "png"]))
+                               get_files(dir_images) if file_name.split('.')[-1] == "png"]))
 
-    pool   = Pool(n_threads)
+    pool = Pool(n_threads)
     result = pool.map(build_image, [(idx, form, dir_images, quality, density,
-            down_ratio, buckets) for idx, form in formulas.items()
-            if idx not in existing_idx])
+                                     down_ratio, buckets) for idx, form in formulas.items()
+                                    if idx not in existing_idx])
     pool.close()
     pool.join()
 
